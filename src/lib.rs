@@ -1,13 +1,11 @@
-pub use config::Config;
 pub use deserializer::Database;
 
-use crate::structs::VitessError;
+use crate::structs::{Session, VitessError};
 use anyhow::Result;
 use reqwest::Url;
 use structs::{ExecuteRequest, ExecuteResponse};
 use utils::to_base64;
 
-mod config;
 mod response;
 mod structs;
 mod utils;
@@ -18,36 +16,44 @@ pub trait Deserializer {
         Self: Sized;
 }
 
-#[derive(Database, Debug)]
-pub struct Test {
-    pub id: i32,
-    pub count: i32,
-    pub elon: f64,
-    pub test: String,
+pub struct PSConnection {
+    pub host: String,
+    pub username: String,
+    pub password: String,
+    pub session: Option<Session>,
+    pub client: reqwest::Client,
 }
 
-#[derive(Database, Debug)]
-pub struct Count {
-    pub count: i32,
+impl PSConnection {
+    pub fn new(host: &str, username: &str, password: &str) -> Self {
+        Self {
+            host: host.into(),
+            username: username.into(),
+            password: password.into(),
+            session: None,
+            client: reqwest::Client::new(),
+        }
+    }
+
+    pub async fn execute(&mut self, query: &str) -> Result<ExecuteResponse> {
+        let url =
+            Url::parse(format!("https://{}/psdb.v1alpha1.Database/Execute", self.host).as_str())
+                .unwrap();
+
+        let sql = ExecuteRequest {
+            query: query.into(),
+            session: self.session.clone(),
+        };
+
+        let res: ExecuteResponse = post(self, url.as_str(), sql).await?;
+        self.session = Some(res.session.clone());
+
+        Ok(res)
+    }
 }
 
-pub async fn execute(query: &str, config: &mut Config) -> Result<ExecuteResponse> {
-    let url =
-        Url::parse(format!("https://{}/psdb.v1alpha1.Database/Execute", config.host).as_str())
-            .unwrap();
-
-    let sql = ExecuteRequest {
-        query: query.into(),
-        session: config.session.clone(),
-    };
-
-    let res: ExecuteResponse = post(config, url.as_str(), sql).await?;
-    config.session = Some(res.session.clone());
-
-    Ok(res)
-}
-
-async fn post<B, R>(config: &Config, url: &str, body: B) -> Result<R>
+// MAYBE ![CFG] THIS?
+async fn post<B, R>(config: &PSConnection, url: &str, body: B) -> Result<R>
 where
     B: serde::Serialize,
     R: serde::de::DeserializeOwned,
