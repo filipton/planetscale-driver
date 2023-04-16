@@ -22,12 +22,15 @@ pub fn derive_database(_input: TokenStream) -> TokenStream {
             field_names.push(name);
 
             let index = syn::Index::from(i);
-            field_values.push(quote::quote! { input[#index].parse()? });
+            field_values.push(quote::quote! {
+                input.get(#index)
+                    .map_or_else(|| anyhow::bail!("Index out of range"), |v| Ok(v))?.parse()?
+            });
         }
 
         let output = quote::quote! {
             impl Deserializer for #name {
-                fn deserialize_raw(input: Vec<&str>) -> Result<Self> {
+                fn deserialize_raw(input: Vec<&str>) -> anyhow::Result<Self> {
                     Ok(Self {
                         #(
                             #field_names: #field_values,

@@ -2,12 +2,6 @@ use serde::{Deserialize, Serialize};
 
 // https://transform.tools/json-to-rust-serde
 
-pub struct Config {
-    pub host: String,
-    pub username: String,
-    pub password: String,
-}
-
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExecuteRequest {

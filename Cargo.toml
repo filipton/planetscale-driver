@@ -1,5 +1,5 @@
 [package]
-name = "planetscale-serverless-driver"
+name = "planetscale-driver"
 version = "0.1.0"
 edition = "2021"
 

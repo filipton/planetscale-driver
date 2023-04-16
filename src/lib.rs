@@ -1,9 +1,14 @@
-use anyhow::{Context, Result};
-use deserializer::Database;
-use reqwest::Url;
-use structs::{Config, ExecuteRequest, ExecuteResponse};
+pub use deserializer::Database;
 
+use crate::structs::VitessError;
+use anyhow::Result;
+use reqwest::Url;
+use structs::{ExecuteRequest, ExecuteResponse, Session};
+use utils::to_base64;
+
+mod response;
 mod structs;
+mod utils;
 
 pub trait Deserializer {
     fn deserialize_raw(input: Vec<&str>) -> Result<Self>
@@ -19,17 +24,41 @@ pub struct Test {
     pub test: String,
 }
 
+#[derive(Database, Debug)]
+pub struct Count {
+    pub count: i32,
+}
+
+pub struct Config {
+    pub host: String,
+    pub username: String,
+    pub password: String,
+    pub session: Option<Session>,
+    pub client: reqwest::Client,
+}
+
 // THIS WILL BE REMOVED!
 #[tokio::main]
-pub async fn main() -> Result<()> {
-    let config: Config = Config {
+#[allow(unused)]
+async fn main() -> Result<()> {
+    let mut config: Config = Config {
         host: "aws.connect.psdb.cloud".into(),
         username: "zrhq79gia2vqhporjydc".into(),
         password: "pscale_pw_N11vup13sipUzd2cc8sY0nYxRp7WA0lEVfRydcizdwI".into(),
+        session: None,
+        client: reqwest::Client::new(),
     };
 
-    let res = execute("SELECT * FROM counter", &config).await?;
-    let row: DeserializerT<Test> = res.into();
+    let res = execute("SELECT * FROM counter", &mut config).await?;
+    let row: Test = res.deserialize()?;
+    println!("{:?}", row);
+
+    let res = execute("SELECT COUNT(*) FROM counter", &mut config).await?;
+    let row: Count = res.deserialize()?;
+    println!("{:?}", row);
+
+    let res = execute("SELECT * FROM counter", &mut config).await?;
+    let row: Test = res.deserialize()?;
     println!("{:?}", row);
 
     //let rows: Vec<Test> = res.deserialize_multiple()?;
@@ -38,32 +67,19 @@ pub async fn main() -> Result<()> {
     Ok(())
 }
 
-#[derive(Debug)]
-struct DeserializerT<T>(T);
-
-impl<T> From<ExecuteResponse> for DeserializerT<T>
-where
-    T: Deserializer,
-{
-    fn from(res: ExecuteResponse) -> Self {
-        let row: T = res.deserialize().unwrap();
-        DeserializerT(row)
-    }
-}
-
-// TODO: args
-pub async fn execute(query: &str, config: &Config) -> Result<ExecuteResponse> {
+pub async fn execute(query: &str, config: &mut Config) -> Result<ExecuteResponse> {
     let url =
         Url::parse(format!("https://{}/psdb.v1alpha1.Database/Execute", config.host).as_str())
             .unwrap();
 
-    // TODO: args
     let sql = ExecuteRequest {
         query: query.into(),
-        session: None,
+        session: config.session.clone(),
     };
 
     let res: ExecuteResponse = post(config, url.as_str(), sql).await?;
+    config.session = Some(res.session.clone());
+
     Ok(res)
 }
 
@@ -75,8 +91,8 @@ where
     let auth = format!("{}:{}", config.username, config.password);
     let auth = to_base64(&auth);
 
-    let client = reqwest::Client::new();
-    let req = client
+    let req = config
+        .client
         .post(url)
         .header("Content-Type", "application/json")
         .header("User-Agent", "database-js/1.7.0")
@@ -85,102 +101,10 @@ where
     let res = req.send().await?;
 
     // CHECK IF RESPONSE IS ERROREED
-    // throw with anyhow! macro
+    if !res.status().is_success() {
+        let error: VitessError = serde_json::from_str(&res.text().await?)?;
+        anyhow::bail!("Code: \"{}\", message: \"{}\"", error.code, error.message);
+    }
 
     Ok(serde_json::from_str(&res.text().await?)?)
-}
-
-impl ExecuteResponse {
-    pub fn deserialize<T>(&self) -> Result<T>
-    where
-        T: Deserializer,
-    {
-        if let Some(res) = &self.result {
-            if let Some(_fields) = &res.fields {
-                /*
-                tmp.types = fields
-                    .iter()
-                    .map(|f| ParsedFieldType::from_str(&f.type_field))
-                    .collect();
-                */
-
-                if res.rows.len() != 1 {
-                    anyhow::bail!("Expected 1 row, got {}", res.rows.len());
-                }
-
-                let row = &res.rows[0];
-                let row_str = from_base64(&row.values);
-                let row_str = String::from_utf8(row_str).unwrap();
-
-                let lengths: Vec<usize> = row
-                    .lengths
-                    .iter()
-                    .map(|l| l.parse::<usize>().unwrap())
-                    .collect();
-
-                let mut row_vec: Vec<&str> = Vec::new();
-                let mut last = 0;
-                for length in lengths {
-                    row_vec.push(&row_str[last..(last + length)]);
-                    last += length;
-                }
-
-                let res = T::deserialize_raw(row_vec).context("Failed to deserialize row")?;
-                return Ok(res);
-            }
-        }
-
-        anyhow::bail!("No results found");
-    }
-
-    pub fn deserialize_multiple<T>(&self) -> Result<Vec<T>>
-    where
-        T: Deserializer,
-    {
-        if let Some(res) = &self.result {
-            if let Some(_fields) = &res.fields {
-                /*
-                tmp.types = fields
-                    .iter()
-                    .map(|f| ParsedFieldType::from_str(&f.type_field))
-                    .collect();
-                */
-
-                let mut out: Vec<T> = Vec::new();
-                for row in &res.rows {
-                    let row_str = from_base64(&row.values);
-                    let row_str = String::from_utf8(row_str).unwrap();
-
-                    let lengths: Vec<usize> = row
-                        .lengths
-                        .iter()
-                        .map(|l| l.parse::<usize>().unwrap())
-                        .collect();
-
-                    let mut row_vec: Vec<&str> = Vec::new();
-                    let mut last = 0;
-                    for length in lengths {
-                        row_vec.push(&row_str[last..(last + length)]);
-                        last += length;
-                    }
-
-                    out.push(T::deserialize_raw(row_vec).context("Failed to deserialize row")?);
-                }
-
-                return Ok(out);
-            }
-        }
-
-        anyhow::bail!("No results found");
-    }
-}
-
-fn to_base64(s: &str) -> String {
-    use base64::{engine::general_purpose, Engine as _};
-    general_purpose::STANDARD.encode(s.as_bytes())
-}
-
-fn from_base64(s: &str) -> Vec<u8> {
-    use base64::{engine::general_purpose, Engine as _};
-    general_purpose::STANDARD.decode(s.as_bytes()).unwrap()
 }
