@@ -30,7 +30,18 @@ impl PSConnection {
     }
 
     /// Executes a SQL query
-    pub async fn execute(&mut self, query: &str) -> Result<ExecuteResponse> {
+    pub async fn execute(&self, query: &str) -> Result<ExecuteResponse> {
+        let url = format!("https://{}/psdb.v1alpha1.Database/Execute", self.host);
+        let sql = ExecuteRequest {
+            query: query.into(),
+            session: None,
+        };
+
+        let res: ExecuteResponse = post(self, &url, sql).await?;
+        Ok(res)
+    }
+
+    pub async fn execute_session(&mut self, query: &str) -> Result<ExecuteResponse> {
         let url = format!("https://{}/psdb.v1alpha1.Database/Execute", self.host);
         let sql = ExecuteRequest {
             query: query.into(),

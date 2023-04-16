@@ -25,12 +25,21 @@ impl QueryBuilder {
         self
     }
 
-    pub async fn execute(self, connection: &mut PSConnection) -> Result<ExecuteResponse> {
+    pub async fn execute(self, connection: &PSConnection) -> Result<ExecuteResponse> {
         let mut query = self.query;
         for i in 0..self.values.len() {
             query = query.replace(&format!("${}", i), &self.values[i]);
         }
 
         connection.execute(&query).await
+    }
+
+    pub async fn execute_session(self, connection: &mut PSConnection) -> Result<ExecuteResponse> {
+        let mut query = self.query;
+        for i in 0..self.values.len() {
+            query = query.replace(&format!("${}", i), &self.values[i]);
+        }
+
+        connection.execute_session(&query).await
     }
 }
