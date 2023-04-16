@@ -1,11 +1,15 @@
+use std::time::SystemTime;
+
 pub use deserializer::Database;
 
 use crate::structs::VitessError;
 use anyhow::Result;
+use config::Config;
 use reqwest::Url;
-use structs::{ExecuteRequest, ExecuteResponse, Session};
+use structs::{ExecuteRequest, ExecuteResponse};
 use utils::to_base64;
 
+mod config;
 mod response;
 mod structs;
 mod utils;
@@ -29,25 +33,18 @@ pub struct Count {
     pub count: i32,
 }
 
-pub struct Config {
-    pub host: String,
-    pub username: String,
-    pub password: String,
-    pub session: Option<Session>,
-    pub client: reqwest::Client,
-}
-
 // THIS WILL BE REMOVED!
 #[tokio::main]
 #[allow(unused)]
 async fn main() -> Result<()> {
-    let mut config: Config = Config {
-        host: "aws.connect.psdb.cloud".into(),
-        username: "zrhq79gia2vqhporjydc".into(),
-        password: "pscale_pw_N11vup13sipUzd2cc8sY0nYxRp7WA0lEVfRydcizdwI".into(),
-        session: None,
-        client: reqwest::Client::new(),
-    };
+    let start = SystemTime::now();
+    let mut config = Config::new(
+        "aws.connect.psdb.cloud",
+        "zrhq79gia2vqhporjydc",
+        "pscale_pw_N11vup13sipUzd2cc8sY0nYxRp7WA0lEVfRydcizdwI",
+    );
+
+    println!("elasped: {:?}", start.elapsed().unwrap());
 
     let res = execute("SELECT * FROM counter", &mut config).await?;
     let row: Test = res.deserialize()?;
@@ -60,6 +57,8 @@ async fn main() -> Result<()> {
     let res = execute("SELECT * FROM counter", &mut config).await?;
     let row: Test = res.deserialize()?;
     println!("{:?}", row);
+
+    println!("elasped: {:?}", start.elapsed().unwrap());
 
     //let rows: Vec<Test> = res.deserialize_multiple()?;
     //println!("{:?}", rows);
