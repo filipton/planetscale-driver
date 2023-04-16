@@ -15,7 +15,7 @@ pub struct ExecuteResponse {
     pub session: Session,
     pub result: Option<QueryResult>,
     pub error: Option<VitessError>,
-    pub timing: f64,
+    pub timing: Option<f64>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -38,7 +38,7 @@ pub struct VitessSession {
     pub autocommit: bool,
     pub options: Options,
     pub found_rows: Option<String>,
-    pub row_count: String,
+    pub row_count: Option<String>,
     #[serde(rename = "DDLStrategy")]
     pub ddlstrategy: String,
     #[serde(rename = "SessionUUID")]

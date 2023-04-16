@@ -1,4 +1,5 @@
 pub use deserializer::Database;
+pub use response::Deserializer;
 
 use anyhow::Result;
 use structs::{ExecuteRequest, ExecuteResponse, Session, VitessError};
@@ -8,12 +9,6 @@ mod response;
 mod structs;
 mod utils;
 
-pub trait Deserializer {
-    fn deserialize_raw(input: Vec<&str>) -> Result<Self>
-    where
-        Self: Sized;
-}
-
 pub struct PSConnection {
     pub host: String,
     pub auth: String,
@@ -22,6 +17,7 @@ pub struct PSConnection {
 }
 
 impl PSConnection {
+    /// Creates a new connection
     pub fn new(host: &str, username: &str, password: &str) -> Self {
         Self {
             host: host.into(),
@@ -31,6 +27,7 @@ impl PSConnection {
         }
     }
 
+    /// Executes a SQL query
     pub async fn execute(&mut self, query: &str) -> Result<ExecuteResponse> {
         let url = format!("https://{}/psdb.v1alpha1.Database/Execute", self.host);
         let sql = ExecuteRequest {
@@ -38,10 +35,19 @@ impl PSConnection {
             session: self.session.clone(),
         };
 
-        let res: ExecuteResponse = post(self, url.as_str(), sql).await?;
+        let res: ExecuteResponse = post(self, &url, sql).await?;
         self.session = Some(res.session.clone());
 
         Ok(res)
+    }
+
+    /// Refreshes the session
+    pub async fn refresh(&mut self) -> Result<()> {
+        let url = format!("https://{}/psdb.v1alpha1.Database/CreateSession", self.host);
+        let res: ExecuteResponse = post_wob(self, &url).await?;
+        self.session = Some(res.session.clone());
+
+        Ok(())
     }
 }
 
@@ -58,6 +64,27 @@ where
         .header("User-Agent", "database-rust/0.1.0")
         .header("Authorization", &connection.auth)
         .body(serde_json::to_string(&body)?);
+    let res = req.send().await?;
+
+    if !res.status().is_success() {
+        let error: VitessError = serde_json::from_str(&res.text().await?)?;
+        anyhow::bail!("Code: \"{}\", message: \"{}\"", error.code, error.message);
+    }
+
+    Ok(serde_json::from_str(&res.text().await?)?)
+}
+
+async fn post_wob<R>(connection: &PSConnection, url: &str) -> Result<R>
+where
+    R: serde::de::DeserializeOwned,
+{
+    let req = connection
+        .client
+        .post(url)
+        .header("Content-Type", "application/json")
+        .header("User-Agent", "database-rust/0.1.0")
+        .header("Authorization", &connection.auth)
+        .body("{}");
     let res = req.send().await?;
 
     if !res.status().is_success() {

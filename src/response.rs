@@ -1,5 +1,11 @@
-use crate::{structs::ExecuteResponse, utils::from_base64, Deserializer};
+use crate::{structs::ExecuteResponse, utils::from_base64};
 use anyhow::{Context, Result};
+
+pub trait Deserializer {
+    fn deserialize_raw(input: Vec<&str>) -> Result<Self>
+    where
+        Self: Sized;
+}
 
 impl ExecuteResponse {
     pub fn deserialize<T>(&self) -> Result<T>
