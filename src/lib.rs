@@ -1,10 +1,12 @@
 pub use deserializer::Database;
+pub use querybuilder::QueryBuilder;
 pub use response::Deserializer;
 
 use anyhow::Result;
 use structs::{ExecuteRequest, ExecuteResponse, Session, VitessError};
 use utils::to_base64;
 
+mod querybuilder;
 mod response;
 mod structs;
 mod utils;
