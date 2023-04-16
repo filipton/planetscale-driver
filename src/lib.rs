@@ -1,9 +1,7 @@
 pub use deserializer::Database;
 
-use crate::structs::{Session, VitessError};
 use anyhow::Result;
-use reqwest::Url;
-use structs::{ExecuteRequest, ExecuteResponse};
+use structs::{ExecuteRequest, ExecuteResponse, Session, VitessError};
 use utils::to_base64;
 
 mod response;
@@ -18,8 +16,7 @@ pub trait Deserializer {
 
 pub struct PSConnection {
     pub host: String,
-    pub username: String,
-    pub password: String,
+    pub auth: String,
     pub session: Option<Session>,
     pub client: reqwest::Client,
 }
@@ -28,18 +25,14 @@ impl PSConnection {
     pub fn new(host: &str, username: &str, password: &str) -> Self {
         Self {
             host: host.into(),
-            username: username.into(),
-            password: password.into(),
+            auth: format!("Basic {}", to_base64(&format!("{}:{}", username, password))),
             session: None,
             client: reqwest::Client::new(),
         }
     }
 
     pub async fn execute(&mut self, query: &str) -> Result<ExecuteResponse> {
-        let url =
-            Url::parse(format!("https://{}/psdb.v1alpha1.Database/Execute", self.host).as_str())
-                .unwrap();
-
+        let url = format!("https://{}/psdb.v1alpha1.Database/Execute", self.host);
         let sql = ExecuteRequest {
             query: query.into(),
             session: self.session.clone(),
@@ -53,24 +46,20 @@ impl PSConnection {
 }
 
 // MAYBE ![CFG] THIS?
-async fn post<B, R>(config: &PSConnection, url: &str, body: B) -> Result<R>
+async fn post<B, R>(connection: &PSConnection, url: &str, body: B) -> Result<R>
 where
     B: serde::Serialize,
     R: serde::de::DeserializeOwned,
 {
-    let auth = format!("{}:{}", config.username, config.password);
-    let auth = to_base64(&auth);
-
-    let req = config
+    let req = connection
         .client
         .post(url)
         .header("Content-Type", "application/json")
-        .header("User-Agent", "database-js/1.7.0")
-        .header("Authorization", format!("Basic {}", auth))
+        .header("User-Agent", "database-rust/0.1.0")
+        .header("Authorization", &connection.auth)
         .body(serde_json::to_string(&body)?);
     let res = req.send().await?;
 
-    // CHECK IF RESPONSE IS ERROREED
     if !res.status().is_success() {
         let error: VitessError = serde_json::from_str(&res.text().await?)?;
         anyhow::bail!("Code: \"{}\", message: \"{}\"", error.code, error.message);
