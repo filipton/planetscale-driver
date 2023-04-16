@@ -1,10 +1,8 @@
-use std::time::SystemTime;
-
+pub use config::Config;
 pub use deserializer::Database;
 
 use crate::structs::VitessError;
 use anyhow::Result;
-use config::Config;
 use reqwest::Url;
 use structs::{ExecuteRequest, ExecuteResponse};
 use utils::to_base64;
@@ -31,39 +29,6 @@ pub struct Test {
 #[derive(Database, Debug)]
 pub struct Count {
     pub count: i32,
-}
-
-// THIS WILL BE REMOVED!
-#[tokio::main]
-#[allow(unused)]
-async fn main() -> Result<()> {
-    let start = SystemTime::now();
-    let mut config = Config::new(
-        "aws.connect.psdb.cloud",
-        "zrhq79gia2vqhporjydc",
-        "pscale_pw_N11vup13sipUzd2cc8sY0nYxRp7WA0lEVfRydcizdwI",
-    );
-
-    println!("elasped: {:?}", start.elapsed().unwrap());
-
-    let res = execute("SELECT * FROM counter", &mut config).await?;
-    let row: Test = res.deserialize()?;
-    println!("{:?}", row);
-
-    let res = execute("SELECT COUNT(*) FROM counter", &mut config).await?;
-    let row: Count = res.deserialize()?;
-    println!("{:?}", row);
-
-    let res = execute("SELECT * FROM counter", &mut config).await?;
-    let row: Test = res.deserialize()?;
-    println!("{:?}", row);
-
-    println!("elasped: {:?}", start.elapsed().unwrap());
-
-    //let rows: Vec<Test> = res.deserialize_multiple()?;
-    //println!("{:?}", rows);
-
-    Ok(())
 }
 
 pub async fn execute(query: &str, config: &mut Config) -> Result<ExecuteResponse> {
