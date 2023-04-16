@@ -29,15 +29,26 @@ pub async fn main() -> Result<()> {
     };
 
     let res = execute("SELECT * FROM counter", &config).await?;
-    let row = res.row::<Test>()?;
+    let row: DeserializerT<Test> = res.into();
     println!("{:?}", row);
-    //println!("{:?}", res);
-    //let rows = res.get_rows();
+
+    //let rows: Vec<Test> = res.deserialize_multiple()?;
     //println!("{:?}", rows);
-    //println!("{:?}", res.get_rows().parse_value::<f64>(0, 2));
-    //println!("{:?}", rows.rows[0].parse_value::<u32>(1));
 
     Ok(())
+}
+
+#[derive(Debug)]
+struct DeserializerT<T>(T);
+
+impl<T> From<ExecuteResponse> for DeserializerT<T>
+where
+    T: Deserializer,
+{
+    fn from(res: ExecuteResponse) -> Self {
+        let row: T = res.deserialize().unwrap();
+        DeserializerT(row)
+    }
 }
 
 // TODO: args
@@ -80,7 +91,7 @@ where
 }
 
 impl ExecuteResponse {
-    pub fn row<T>(&self) -> Result<T>
+    pub fn deserialize<T>(&self) -> Result<T>
     where
         T: Deserializer,
     {
@@ -119,7 +130,48 @@ impl ExecuteResponse {
             }
         }
 
-        anyhow::bail!("No result found");
+        anyhow::bail!("No results found");
+    }
+
+    pub fn deserialize_multiple<T>(&self) -> Result<Vec<T>>
+    where
+        T: Deserializer,
+    {
+        if let Some(res) = &self.result {
+            if let Some(_fields) = &res.fields {
+                /*
+                tmp.types = fields
+                    .iter()
+                    .map(|f| ParsedFieldType::from_str(&f.type_field))
+                    .collect();
+                */
+
+                let mut out: Vec<T> = Vec::new();
+                for row in &res.rows {
+                    let row_str = from_base64(&row.values);
+                    let row_str = String::from_utf8(row_str).unwrap();
+
+                    let lengths: Vec<usize> = row
+                        .lengths
+                        .iter()
+                        .map(|l| l.parse::<usize>().unwrap())
+                        .collect();
+
+                    let mut row_vec: Vec<&str> = Vec::new();
+                    let mut last = 0;
+                    for length in lengths {
+                        row_vec.push(&row_str[last..(last + length)]);
+                        last += length;
+                    }
+
+                    out.push(T::deserialize_raw(row_vec).context("Failed to deserialize row")?);
+                }
+
+                return Ok(out);
+            }
+        }
+
+        anyhow::bail!("No results found");
     }
 }
 
