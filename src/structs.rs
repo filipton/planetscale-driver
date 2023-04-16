@@ -59,7 +59,7 @@ pub struct QueryResult {
     pub rows_affected: Option<String>,
     pub insert_id: Option<String>,
     pub fields: Option<Vec<Field>>,
-    pub rows: Vec<Row>,
+    pub rows: Option<Vec<Row>>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
