@@ -2,10 +2,25 @@ use std::fmt::Debug;
 use std::str::FromStr;
 
 use anyhow::{Context, Result};
+use deserializer::Database;
 use reqwest::Url;
 use structs::{Config, ExecuteRequest, ExecuteResponse};
 
 mod structs;
+
+pub trait Deserializer {
+    fn deserialize_raw(input: Vec<&str>) -> Result<Self>
+    where
+        Self: Sized;
+}
+
+#[derive(Database)]
+pub struct Test {
+    pub id: i32,
+    pub count: i32,
+    pub elon: f64,
+    pub test: String,
+}
 
 // THIS WILL BE REMOVED!
 #[tokio::main]
@@ -15,6 +30,7 @@ pub async fn main() -> Result<()> {
         username: "zrhq79gia2vqhporjydc".into(),
         password: "pscale_pw_N11vup13sipUzd2cc8sY0nYxRp7WA0lEVfRydcizdwI".into(),
     };
+
     let res = execute("SELECT * FROM counter", &config).await?;
     //println!("{:?}", res);
     let rows = res.get_rows();
@@ -140,13 +156,13 @@ impl RowValueParser for Vec<RowValue> {
     }
 }
 
-/// In rows Vec<u8> is in utf8
 #[derive(Debug, Clone)]
 pub struct RowsResultValue {
     pub types: Vec<ParsedFieldType>,
-    pub rows: Vec<Vec<RowValue>>,
+    pub rows: Vec<Row<RowValue>>,
 }
 pub type RowValue = Vec<u8>;
+pub type Row<T> = Vec<T>;
 
 #[derive(Debug, Clone)]
 pub enum ParsedFieldType {
