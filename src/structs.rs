@@ -35,7 +35,9 @@ pub struct Session {
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VitessSession {
-    pub autocommit: bool,
+    pub in_transaction: Option<bool>,
+    pub autocommit: Option<bool>,
+    pub shard_sessions: Option<Vec<ShardSession>>,
     pub options: Options,
     pub found_rows: Option<String>,
     pub row_count: Option<String>,
@@ -44,6 +46,29 @@ pub struct VitessSession {
     #[serde(rename = "SessionUUID")]
     pub session_uuid: String,
     pub enable_system_settings: bool,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ShardSession {
+    pub target: Target,
+    pub transaction_id: String,
+    pub tablet_alias: TabletAlias,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Target {
+    pub keyspace: String,
+    pub shard: String,
+    pub tablet_type: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TabletAlias {
+    pub cell: String,
+    pub uid: i64,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]

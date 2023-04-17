@@ -2,7 +2,7 @@ pub use deserializer::Database;
 pub use querybuilder::QueryBuilder;
 pub use response::Deserializer;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use structs::{ExecuteRequest, ExecuteResponse, Session, VitessError};
 use utils::to_base64;
 
@@ -48,11 +48,10 @@ impl PSConnection {
         conn.execute_session("BEGIN").await?;
 
         for query in q {
-            let res = query.execute_session(&mut conn).await;
-
-            if res.is_err() {
+            let res = query.execute_session(&mut conn).await?;
+            if let Some(err) = res.error {
                 conn.execute_session("ROLLBACK").await?;
-                return Err(res.err().unwrap());
+                anyhow::bail!("Code: \"{}\", message: \"{}\"", err.code, err.message);
             }
         }
 
@@ -103,7 +102,10 @@ where
         anyhow::bail!("Code: \"{}\", message: \"{}\"", error.code, error.message);
     }
 
-    Ok(serde_json::from_str(&res.text().await?)?)
+    let test = res.text().await?;
+    println!("{:?}\r\n", test);
+
+    Ok(serde_json::from_str(&test)?)
 }
 
 async fn post_wob<R>(connection: &PSConnection, url: &str) -> Result<R>
