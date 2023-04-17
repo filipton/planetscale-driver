@@ -1,8 +1,8 @@
-pub use deserializer::Database;
+pub use ps_driver_deserializer::Database;
 pub use querybuilder::QueryBuilder;
 pub use response::Deserializer;
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use structs::{ExecuteRequest, ExecuteResponse, Session, VitessError};
 use utils::to_base64;
 
