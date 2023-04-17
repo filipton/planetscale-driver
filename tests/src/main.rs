@@ -1,4 +1,9 @@
-use planetscale_driver::{QueryBuilder, PSConnection};
+use planetscale_driver::{Database, Deserializer, PSConnection, QueryBuilder};
+
+#[derive(Database, Debug)]
+struct TestD {
+    val: u32,
+}
 
 #[tokio::main]
 async fn main() {
@@ -13,6 +18,14 @@ async fn main() {
     let random_elon = rand::random::<f64>();
     let random_test = rand::random::<i32>();
 
+    let res =
+        QueryBuilder::new("INSERT INTO counter(id, count, elon, test) VALUES ($0, $1, $2, \"$3\")")
+            .bind(random_id)
+            .bind(random_count)
+            .bind(random_elon)
+            .bind(random_test);
+
+    /*
     let q1 =
         QueryBuilder::new("INSERT INTO counter(id, count, elon, test) VALUES ($0, $1, $2, \"$3\")")
             .bind(random_id)
@@ -23,5 +36,6 @@ async fn main() {
     let q2 = QueryBuilder::new("SELECT 1'");
 
     let res = conn.transaction(vec![q1, q2]).await;
+    */
     println!("{:?}", res);
 }

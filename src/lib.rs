@@ -102,10 +102,7 @@ where
         anyhow::bail!("Code: \"{}\", message: \"{}\"", error.code, error.message);
     }
 
-    let test = res.text().await?;
-    println!("{:?}\r\n", test);
-
-    Ok(serde_json::from_str(&test)?)
+    Ok(serde_json::from_str(&res.text().await?)?)
 }
 
 async fn post_wob<R>(connection: &PSConnection, url: &str) -> Result<R>
