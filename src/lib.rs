@@ -11,6 +11,7 @@ mod response;
 mod structs;
 mod utils;
 
+#[derive(Clone)]
 pub struct PSConnection {
     pub host: String,
     pub auth: String,
@@ -39,6 +40,24 @@ impl PSConnection {
 
         let res: ExecuteResponse = post(self, &url, sql).await?;
         Ok(res)
+    }
+
+    /// Execute a multiple SQL queries using transactions
+    pub async fn transaction(&self, q: Vec<QueryBuilder>) -> Result<()> {
+        let mut conn = self.clone();
+        conn.execute_session("BEGIN").await?;
+
+        for query in q {
+            let res = query.execute_session(&mut conn).await;
+
+            if res.is_err() {
+                conn.execute_session("ROLLBACK").await?;
+                return Err(res.err().unwrap());
+            }
+        }
+
+        conn.execute_session("COMMIT").await?;
+        return Ok(());
     }
 
     pub async fn execute_session(&mut self, query: &str) -> Result<ExecuteResponse> {
