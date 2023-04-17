@@ -3,7 +3,7 @@ name = "planetscale-driver"
 version = "0.1.0"
 edition = "2021"
 description = "PlanetScale Serverless Driver"
-lisense = "MIT"
+license = "MIT"
 exclude = ["tests/*"]
 
 [dependencies]

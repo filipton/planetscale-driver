@@ -1,9 +1,9 @@
 [package]
 name = "ps-driver-deserializer"
+description = "A proc macro to deserialize a PS driver"
 version = "0.1.0"
 edition = "2021"
-lisense = "MIT"
-description = "A proc macro to deserialize a PS driver"
+license = "MIT"
 
 [lib]
 proc-macro = true
