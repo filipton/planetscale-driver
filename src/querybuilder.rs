@@ -4,8 +4,8 @@ use crate::{structs::ExecuteResponse, PSConnection};
 use anyhow::Result;
 
 pub struct QueryBuilder {
-    pub query: String,
-    pub values: Vec<String>,
+    query: String,
+    values: Vec<String>,
 }
 
 impl QueryBuilder {

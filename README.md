@@ -59,4 +59,4 @@ let res = QueryBuilder::new("INSERT INTO test(id, name) VALUES($0, \"$1\")")
   .unwrap();
 ```
 
-### More examples in the future...
+### More examples in the [examples](examples) folder
