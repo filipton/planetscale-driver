@@ -11,29 +11,32 @@ pub fn derive_database(_input: TokenStream) -> TokenStream {
             syn::Fields::Named(fields) => &fields.named,
             _ => panic!("Only named fields are supported"),
         };
+        let fields_len = syn::Index::from(fields.len());
 
-        let mut field_names = Vec::new();
-        let mut field_values = Vec::new();
-
+        let mut names = Vec::new();
+        let mut values = Vec::new();
         for i in 0..fields.len() {
             let field = &fields[i];
 
             let name = &field.ident;
-            field_names.push(name);
+            names.push(name);
 
             let index = syn::Index::from(i);
-            field_values.push(quote::quote! {
-                input.get(#index)
-                    .map_or_else(|| anyhow::bail!("Index out of range"), |v| Ok(v))?.parse()?
+            values.push(quote::quote! {
+                input[#index].parse()?
             });
         }
 
         let output = quote::quote! {
             impl Deserializer for #name {
                 fn deserialize_raw(input: Vec<&str>) -> anyhow::Result<Self> {
+                    if input.len() != #fields_len {
+                        anyhow::bail!("Invalid number of fields");
+                    }
+
                     Ok(Self {
                         #(
-                            #field_names: #field_values,
+                            #names: #values,
                         )*
                     })
                 }

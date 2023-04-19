@@ -6,7 +6,7 @@ description = "PlanetScale Serverless Driver"
 license = "MIT"
 
 [dependencies]
-ps-driver-deserializer = { path = "./deserializer", version = "0.1.0" }
+ps-driver-deserializer = { path = "./deserializer", version = "0.1.1" }
 anyhow = "1.0.70"
 base64 = "0.21.0"
 reqwest = "0.11.16"

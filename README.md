@@ -4,9 +4,9 @@ Rust "version" of [database-js](https://github.com/planetscale/database-js). As 
 It will run perfectly run on Cloudflare Workers Or Vercel Edge Functions.
 
 ## Usage
-You need to add [anyhow](https://docs.rs/anyhow/latest/anyhow/) to your project when using deserializer!
+NOTE: [Anyhow](https://crates.io/crates/anyhow) crate is required while using deserializer.
 
-
+## Examples
 ### Connection and simple SQL execution
 ```rust
 use planetscale_driver::PSConnection;
@@ -60,3 +60,7 @@ let res = QueryBuilder::new("INSERT INTO test(id, name) VALUES($0, \"$1\")")
 ```
 
 ### More examples in the [examples](examples) folder
+If you want to run them:
+```bash
+PS_HOST=<host> PS_USER=<username> PS_PASS=<pscale_password> cargo run --example <example_name>
+```
