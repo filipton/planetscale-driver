@@ -1,5 +1,5 @@
 use crate::{
-    post, post_raw,
+    request::{post, post_raw},
     structs::{ExecuteRequest, ExecuteResponse, Session},
     utils::to_base64,
     QueryBuilder,

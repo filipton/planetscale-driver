@@ -14,19 +14,18 @@ pub async fn main() -> Result<()> {
 
     QueryBuilder::new(
         "CREATE TABLE test_dsadsa2(id INT AUTO_INCREMENT PRIMARY KEY, value INT NOT NULL)",
-        &mut conn,
     )
-    .execute()
+    .execute(&mut conn)
     .await?;
 
     conn.execute("INSERT INTO test_dsadsa2(value) VALUES (321), (654)")
         .await?;
 
     let q_correct = QueryBuilder::new(
-        "INSERT INTO test_dsadsa2(value) VALUES (69), (420), (1337), (69420), (1234), (1111)", &mut conn
+        "INSERT INTO test_dsadsa2(value) VALUES (69), (420), (1337), (69420), (1234), (1111)",
     );
     let q_wrong = QueryBuilder::new(
-        "INSERT INTO test_dsadsa2(valueccxzcxzcxz) VALUES (69), (420), (1337), (69420), (1234), (1111)", &mut conn
+        "INSERT INTO test_dsadsa2(valueccxzcxzcxz) VALUES (69), (420), (1337), (69420), (1234), (1111)",
     );
 
     // Intentionally wrong query without catching the error

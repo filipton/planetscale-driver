@@ -14,16 +14,14 @@ pub async fn main() -> Result<()> {
 
     QueryBuilder::new(
         "CREATE TABLE test_dsadsa(id INT AUTO_INCREMENT PRIMARY KEY, value INT NOT NULL)",
-        &mut conn,
     )
-    .execute()
+    .execute(&mut conn)
     .await?;
 
     QueryBuilder::new(
         "INSERT INTO test_dsadsa(value) VALUES (69), (420), (1337), (69420), (1234), (1111)",
-        &mut conn,
     )
-    .execute()
+    .execute(&mut conn)
     .await?;
 
     let res: Vec<TestDsadsa> = conn
