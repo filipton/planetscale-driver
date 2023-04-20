@@ -19,7 +19,7 @@ NOTE: [Anyhow](https://crates.io/crates/anyhow) crate is required while using de
 ```rust
 use planetscale_driver::PSConnection;
 
-let conn = PSConnection::new(
+let mut conn = PSConnection::new(
   "<host>",
   "<user>",
   "<password>",
@@ -32,7 +32,7 @@ let res = conn.execute("SELECT 1").await.unwrap();
 As you can see, deserialization doesn't use field names (MAYBE IN FUTURE) so remember to write your structs correctly!
 
 ```rust
-use planetscale_driver::{Database, Deserializer};
+use planetscale_driver::{Database, Deserializer, query};
 
 #[derive(Database, Debug)]
 struct TestD {
@@ -41,28 +41,27 @@ struct TestD {
 
 // ...
 
-let res = conn.execute("SELECT 1").await.unwrap();
-let res: TestD = res.deserialize().unwrap();
-
+let res: TestD = query("SELECT 1").fetch_one(&mut conn).await.unwrap();
 println!("{:?}", res);
 ```
 
 ### QueryBuilder
 If you want to bind safely values into your query, you should use QueryBuilder
 
-```rust
-use planetscale_driver::QueryBuilder;
+Note: now query method is wrapper around QueryBuilder
 
+```rust
 // ...
 
 // note: values passed to .bind function must have trait ToString 
 let id = 69;
 let name = "420";
 
-let res = QueryBuilder::new("INSERT INTO test(id, name) VALUES($0, \"$1\")")
+// res there will be empty result, if you want to get reponse data use "execute_raw"
+let res = query("INSERT INTO test(id, name) VALUES($0, \"$1\")")
   .bind(id)
   .bind(name)
-  .execute(&conn)
+  .execute(&mut conn)
   .await
   .unwrap();
 ```
