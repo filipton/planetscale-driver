@@ -25,8 +25,14 @@ impl PSConnection {
         }
     }
 
-    /// Executes a SQL query
-    pub async fn execute(&mut self, query: &str) -> Result<ExecuteResponse> {
+    /// Execute a SQL query
+    pub async fn execute(&mut self, query: &str) -> Result<()> {
+        self.execute_raw(query).await?;
+        Ok(())
+    }
+
+    /// Execute a SQL query and return the raw response
+    pub async fn execute_raw(&mut self, query: &str) -> Result<ExecuteResponse> {
         let url = format!("https://{}/psdb.v1alpha1.Database/Execute", self.host);
         let sql = ExecuteRequest {
             query: query.into(),
@@ -39,24 +45,20 @@ impl PSConnection {
         Ok(res)
     }
 
-    pub fn query<T>(&mut self, query: &str) -> QueryBuilder {
-        QueryBuilder::new(query)
-    }
-
     /// Execute a multiple SQL queries using transactions
     pub async fn transaction(&self, q: Vec<QueryBuilder>) -> Result<()> {
         let mut conn = self.clone();
-        conn.execute("BEGIN").await?;
+        conn.execute_raw("BEGIN").await?;
 
         for query in q {
-            let res = query.execute(&mut conn).await?;
+            let res = query.execute_raw(&mut conn).await?;
             if let Some(err) = res.error {
-                conn.execute("ROLLBACK").await?;
+                conn.execute_raw("ROLLBACK").await?;
                 anyhow::bail!("Code: \"{}\", message: \"{}\"", err.code, err.message);
             }
         }
 
-        conn.execute("COMMIT").await?;
+        conn.execute_raw("COMMIT").await?;
         return Ok(());
     }
 

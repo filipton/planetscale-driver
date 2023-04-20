@@ -4,14 +4,14 @@ use planetscale_driver::QueryBuilder;
 pub async fn simple_query() {
     let query = QueryBuilder::new("SELECT * FROM test");
 
-    assert_eq!(query.generated_sql(), "SELECT * FROM test");
+    assert_eq!(format!("{:?}", query), "SELECT * FROM test");
 }
 
 #[tokio::test]
 pub async fn query_simple_bind() {
     let query = QueryBuilder::new("SELECT * FROM test WHERE id = $0").bind(69);
 
-    assert_eq!(query.generated_sql(), "SELECT * FROM test WHERE id = 69");
+    assert_eq!(format!("{:?}", query), "SELECT * FROM test WHERE id = 69");
 }
 
 #[tokio::test]
@@ -22,7 +22,7 @@ pub async fn query_more_advanced_bind() {
     .bind(69);
 
     assert_eq!(
-        query.generated_sql(),
+        format!("{:?}", query),
         "SELECT *, (SELECT COUNT(*) FROM test2 WHERE other_id = 69) FROM test WHERE id = 69"
     );
 }
@@ -33,7 +33,7 @@ pub async fn query_sql_injection_bind() {
         .bind("dsa\"; DROP DATABASE; --");
 
     assert_eq!(
-        query.generated_sql(),
+        format!("{:?}", query),
         "SELECT * FROM test WHERE text = \"dsa\\\"; DROP DATABASE; --\""
     );
 }

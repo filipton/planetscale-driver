@@ -27,27 +27,47 @@ impl QueryBuilder {
         self
     }
 
-    pub async fn execute(self, connection: &mut PSConnection) -> Result<ExecuteResponse> {
-        let mut query = self.query;
+    fn generate_query(&self) -> String {
+        let mut query = self.query.clone();
         for i in 0..self.values.len() {
             query = query.replace(&format!("${}", i), &self.values[i]);
         }
 
-        connection.execute(&query).await
+        query
     }
 
-    pub async fn fetch_one<T>(self, connection: &PSConnection) -> Result<T>
+    pub async fn execute(self, connection: &mut PSConnection) -> Result<()> {
+        connection.execute(&self.generate_query()).await
+    }
+
+    pub async fn execute_raw(self, connection: &mut PSConnection) -> Result<ExecuteResponse> {
+        connection.execute_raw(&self.generate_query()).await
+    }
+
+    pub async fn fetch_one<T>(self, conn: &mut PSConnection) -> Result<T>
     where
         T: Deserializer,
     {
-        anyhow::bail!("TODO");
+        let res = self.execute_raw(conn).await?;
+        if let Some(err) = res.error {
+            anyhow::bail!("Code: \"{}\", message: \"{}\"", err.code, err.message);
+        }
+
+        let res = res.deserialize()?;
+        Ok(res)
     }
 
-    pub async fn fetch_all<T>(self, connection: &PSConnection) -> Result<Vec<T>>
+    pub async fn fetch_all<T>(self, conn: &mut PSConnection) -> Result<Vec<T>>
     where
         T: Deserializer,
     {
-        anyhow::bail!("TODO");
+        let res = self.execute_raw(conn).await?;
+        if let Some(err) = res.error {
+            anyhow::bail!("Code: \"{}\", message: \"{}\"", err.code, err.message);
+        }
+
+        let res = res.deserialize_multiple()?;
+        Ok(res)
     }
 
     fn sql(&self) -> String {
