@@ -1,5 +1,13 @@
 # PlanetScale Serverless Driver for Rust™
 
+<div align="center">
+  <!-- Version -->
+  <a href="https://crates.io/crates/planetscale-driver">
+    <img src="https://img.shields.io/crates/v/planetscale-driver.svg?style=flat-square"
+    alt="Crates.io version" />
+  </a>
+</div>
+
 Rust "version" of [database-js](https://github.com/planetscale/database-js). As stated in database-js it uses PlanetScale HTTP api for database queries.
 It will run perfectly run on Cloudflare Workers Or Vercel Edge Functions.
 

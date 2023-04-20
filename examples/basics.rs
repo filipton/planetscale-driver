@@ -9,7 +9,7 @@ pub struct TestD {
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
-    let conn = PSConnection::new(&var("PS_HOST")?, &var("PS_USER")?, &var("PS_PASS")?);
+    let mut conn = PSConnection::new(&var("PS_HOST")?, &var("PS_USER")?, &var("PS_PASS")?);
 
     let res = conn.execute("SELECT 1").await?;
     let res: TestD = res.deserialize()?;

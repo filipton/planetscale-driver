@@ -10,22 +10,23 @@ pub struct TestDsadsa {
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
-    let conn = PSConnection::new(&var("PS_HOST")?, &var("PS_USER")?, &var("PS_PASS")?);
+    let mut conn = PSConnection::new(&var("PS_HOST")?, &var("PS_USER")?, &var("PS_PASS")?);
 
     QueryBuilder::new(
         "CREATE TABLE test_dsadsa2(id INT AUTO_INCREMENT PRIMARY KEY, value INT NOT NULL)",
+        &mut conn,
     )
-    .execute(&conn)
+    .execute()
     .await?;
 
     conn.execute("INSERT INTO test_dsadsa2(value) VALUES (321), (654)")
         .await?;
 
     let q_correct = QueryBuilder::new(
-        "INSERT INTO test_dsadsa2(value) VALUES (69), (420), (1337), (69420), (1234), (1111)",
+        "INSERT INTO test_dsadsa2(value) VALUES (69), (420), (1337), (69420), (1234), (1111)", &mut conn
     );
     let q_wrong = QueryBuilder::new(
-        "INSERT INTO test_dsadsa2(valueccxzcxzcxz) VALUES (69), (420), (1337), (69420), (1234), (1111)",
+        "INSERT INTO test_dsadsa2(valueccxzcxzcxz) VALUES (69), (420), (1337), (69420), (1234), (1111)", &mut conn
     );
 
     // Intentionally wrong query without catching the error
