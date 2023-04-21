@@ -69,19 +69,10 @@ impl QueryBuilder {
         let res = res.deserialize_multiple()?;
         Ok(res)
     }
-
-    fn sql(&self) -> String {
-        let mut query = self.query.clone();
-        for i in 0..self.values.len() {
-            query = query.replace(&format!("${}", i), &self.values[i]);
-        }
-
-        query
-    }
 }
 
 impl fmt::Debug for QueryBuilder {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.sql())
+        write!(f, "{}", self.generate_query())
     }
 }

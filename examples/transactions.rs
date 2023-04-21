@@ -11,7 +11,22 @@ pub struct TestDsadsa {
 #[tokio::main]
 pub async fn main() -> Result<()> {
     let mut conn = PSConnection::new(&var("PS_HOST")?, &var("PS_USER")?, &var("PS_PASS")?);
+    let res = conn
+        .trans(|c| async move {
+            let mut d = c.lock().unwrap();
 
+            d.execute_raw(
+                "CREATE TABLE test_dsadsa(id INT AUTO_INCREMENT PRIMARY KEY, value INT NOT NULL)",
+            )
+            .await?;
+
+            Ok(())
+        })
+        .await;
+
+    println!("{:?}", res);
+
+    /*
     query("CREATE TABLE test_dsadsa2(id INT AUTO_INCREMENT PRIMARY KEY, value INT NOT NULL)")
         .execute(&mut conn)
         .await?;
@@ -35,5 +50,6 @@ pub async fn main() -> Result<()> {
     println!("{:?}", res);
 
     conn.execute("DROP TABLE test_dsadsa2").await?;
+    */
     return Ok(());
 }

@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use crate::{
     request::{post, post_raw},
     structs::{ExecuteRequest, ExecuteResponse, Session},
@@ -42,6 +44,10 @@ impl PSConnection {
         let res: ExecuteResponse = post(self, &url, sql).await?;
         self.session = Some(res.session.clone());
 
+        if let Some(err) = res.error {
+            anyhow::bail!("Code: \"{}\", message: \"{}\"", err.code, err.message);
+        }
+
         Ok(res)
     }
 
@@ -60,6 +66,24 @@ impl PSConnection {
 
         conn.execute_raw("COMMIT").await?;
         return Ok(());
+    }
+
+    pub async fn trans<F, Fut>(&self, f: F) -> Result<()>
+    where
+        F: FnOnce(Arc<Mutex<Self>>) -> Fut,
+        Fut: std::future::Future<Output = Result<()>>,
+    {
+        let cloned_conn = Arc::new(Mutex::new(self.clone()));
+
+        cloned_conn.lock().unwrap().execute("BEGIN").await?;
+        let res = f(cloned_conn.clone()).await;
+        if res.is_err() {
+            cloned_conn.lock().unwrap().execute("ROLLBACK").await?;
+            return res;
+        }
+
+        cloned_conn.lock().unwrap().execute("COMMIT").await?;
+        Ok(())
     }
 
     /// Refreshes the session
