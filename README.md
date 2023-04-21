@@ -4,7 +4,13 @@
   <!-- Version -->
   <a href="https://crates.io/crates/planetscale-driver">
     <img src="https://img.shields.io/crates/v/planetscale-driver.svg?style=flat-square"
-    alt="Crates.io version" />
+        alt="Crates.io version" />
+  </a>
+
+  <!-- Docs -->
+  <a href="https://docs.rs/planetscale-driver">
+    <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square"
+        alt="docs.rs docs" />
   </a>
 </div>
 
@@ -64,6 +70,24 @@ let res = query("INSERT INTO test(id, name) VALUES($0, \"$1\")")
   .execute(&mut conn)
   .await
   .unwrap();
+```
+
+### Transactions
+```rust
+// ...
+
+// NOTE: conn in closure isn't affecting main conn, its copied so session
+// isn't modifed on "original" conn
+conn.transaction(|conn| async move {
+    //             ^- conn is begind Arc Mutex so we must do that
+    let mut conn = conn.lock().expect("Failed to lock connection");
+
+    conn.execute("QUERY")
+        .await?;
+
+    conn.execute("OTHER QUERY")
+        .await?;
+}).await?;
 ```
 
 ### More examples in the [examples](examples) folder
