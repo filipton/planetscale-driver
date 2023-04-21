@@ -1,12 +1,10 @@
-use std::sync::{Arc, Mutex};
-
 use crate::{
     request::{post, post_raw},
     structs::{ExecuteRequest, ExecuteResponse, Session},
     utils::to_base64,
-    QueryBuilder,
 };
 use anyhow::Result;
+use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
 pub struct PSConnection {
@@ -51,24 +49,8 @@ impl PSConnection {
         Ok(res)
     }
 
-    /// Execute a multiple SQL queries using transactions
-    pub async fn transaction(&self, q: Vec<QueryBuilder>) -> Result<()> {
-        let mut conn = self.clone();
-        conn.execute_raw("BEGIN").await?;
-
-        for query in q {
-            let res = query.execute_raw(&mut conn).await?;
-            if let Some(err) = res.error {
-                conn.execute_raw("ROLLBACK").await?;
-                anyhow::bail!("Code: \"{}\", message: \"{}\"", err.code, err.message);
-            }
-        }
-
-        conn.execute_raw("COMMIT").await?;
-        return Ok(());
-    }
-
-    pub async fn trans<F, Fut>(&self, f: F) -> Result<()>
+    /// As the name suggests, this function is making a transaction
+    pub async fn transaction<F, Fut>(&self, f: F) -> Result<()>
     where
         F: FnOnce(Arc<Mutex<Self>>) -> Fut,
         Fut: std::future::Future<Output = Result<()>>,
