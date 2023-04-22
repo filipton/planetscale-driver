@@ -2,8 +2,7 @@ use proc_macro::TokenStream;
 
 #[proc_macro_derive(Database)]
 pub fn derive_database(_input: TokenStream) -> TokenStream {
-    let input = _input.clone();
-    let input = syn::parse_macro_input!(input as syn::DeriveInput);
+    let input = syn::parse_macro_input!(_input as syn::DeriveInput);
     let name = &input.ident;
 
     if let syn::Data::Struct(data) = &input.data {
@@ -43,7 +42,7 @@ pub fn derive_database(_input: TokenStream) -> TokenStream {
             }
         };
 
-        return TokenStream::from(output);
+        TokenStream::from(output)
     } else {
         panic!("Only structs are supported")
     }

@@ -72,7 +72,7 @@ impl PSConnection {
     pub async fn refresh(&mut self) -> Result<()> {
         let url = format!("https://{}/psdb.v1alpha1.Database/CreateSession", self.host);
         let res: ExecuteResponse = post_raw(self, &url, String::from("{}")).await?;
-        self.session = Some(res.session.clone());
+        self.session = Some(res.session);
 
         Ok(())
     }

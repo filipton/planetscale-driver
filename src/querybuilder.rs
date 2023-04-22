@@ -19,9 +19,9 @@ impl QueryBuilder {
     pub fn bind<T: ToString>(mut self, value: T) -> Self {
         let sanitized = value
             .to_string()
-            .replace("'", "''")
-            .replace("\"", "\\\"")
-            .replace("`", "\\`");
+            .replace('\'', "''")
+            .replace('\"', "\\\"")
+            .replace('`', "\\`");
 
         self.values.push(sanitized);
         self
