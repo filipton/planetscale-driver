@@ -14,5 +14,8 @@ pub async fn main() -> Result<()> {
     let res: TestD = query("SELECT true").fetch_one(&mut conn).await?;
     println!("{:?}", res);
 
+    let res: bool = query("SELECT true").fetch_scalar(&mut conn).await?;
+    println!("{:?}", res);
+
     return Ok(());
 }
