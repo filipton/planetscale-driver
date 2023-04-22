@@ -87,6 +87,8 @@ conn.transaction(|conn| async move {
 
     conn.execute("OTHER QUERY")
         .await?;
+
+    Ok(())
 }).await?;
 ```
 
