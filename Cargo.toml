@@ -1,6 +1,6 @@
 [package]
 name = "planetscale-driver"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 description = "PlanetScale Serverless Driver"
 license = "MIT"
@@ -13,6 +13,7 @@ base64 = "0.21.0"
 reqwest = "0.11.16"
 serde = { version = "1.0.160", features = ["derive"] }
 serde_json = "1.0.96"
+async-mutex = "1.4.0"
 
 [dev-dependencies]
 tokio = { version = "1.27.0", features = ["full"] }

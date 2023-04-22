@@ -4,7 +4,8 @@ use crate::{
     utils::to_base64,
 };
 use anyhow::Result;
-use std::sync::{Arc, Mutex};
+use async_mutex::Mutex;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct PSConnection {
@@ -57,14 +58,14 @@ impl PSConnection {
     {
         let cloned_conn = Arc::new(Mutex::new(self.clone()));
 
-        cloned_conn.lock().unwrap().execute("BEGIN").await?;
+        cloned_conn.lock().await.execute("BEGIN").await?;
         let res = f(cloned_conn.clone()).await;
         if res.is_err() {
-            cloned_conn.lock().unwrap().execute("ROLLBACK").await?;
+            cloned_conn.lock().await.execute("ROLLBACK").await?;
             return res;
         }
 
-        cloned_conn.lock().unwrap().execute("COMMIT").await?;
+        cloned_conn.lock().await.execute("COMMIT").await?;
         Ok(())
     }
 

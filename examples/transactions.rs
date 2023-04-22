@@ -22,7 +22,7 @@ pub async fn main() -> Result<()> {
     // Intentionally wrong query without catching the error
     _ = conn
         .transaction(|conn| async move {
-            let mut conn = conn.lock().expect("Failed to lock connection");
+            let mut conn = conn.lock().await;
 
             // good
             conn.execute("INSERT INTO test_dsadsa2(value) VALUES (69), (420), (1337), (69420), (1234), (1111)")
