@@ -1,4 +1,4 @@
-use crate::{structs::ExecuteResponse, utils::from_base64};
+use crate::{structs::ExecuteResponse, utils::from_base64, Parser};
 use anyhow::{Context, Result};
 
 pub trait Deserializer {
@@ -71,6 +71,34 @@ impl ExecuteResponse {
                 }
 
                 return Ok(out);
+            }
+        }
+
+        anyhow::bail!("No results found");
+    }
+
+    pub fn deserialize_scalar<T>(&self) -> Result<T>
+    where
+        T: Parser,
+    {
+        if let Some(res) = &self.result {
+            if let Some(rows) = &res.rows {
+                if rows.len() != 1 || rows[0].lengths.len() != 1 {
+                    anyhow::bail!(
+                        "Expected 1 row 1 value, got {} rows, {} values",
+                        rows.len(),
+                        rows[0].lengths.len()
+                    );
+                }
+
+                let row = &rows[0];
+                let row_str = from_base64(&row.values);
+                let row_str = String::from_utf8(row_str).unwrap();
+
+                let res = T::custom_parse(&row_str)
+                    .ok()
+                    .context(format!("Failed to deserialize scalar {:?}", row_str))?;
+                return Ok(res);
             }
         }
 

@@ -1,7 +1,6 @@
-use core::fmt;
-
-use crate::{structs::ExecuteResponse, Deserializer, PSConnection};
+use crate::{structs::ExecuteResponse, Deserializer, PSConnection, Parser};
 use anyhow::Result;
+use core::fmt;
 
 pub struct QueryBuilder {
     query: String,
@@ -50,7 +49,7 @@ impl QueryBuilder {
     {
         let res = self.execute_raw(conn).await?;
         if let Some(err) = res.error {
-            anyhow::bail!("Code: \"{}\", message: \"{}\"", err.code, err.message);
+            anyhow::bail!(err.message);
         }
 
         let res = res.deserialize()?;
@@ -63,10 +62,23 @@ impl QueryBuilder {
     {
         let res = self.execute_raw(conn).await?;
         if let Some(err) = res.error {
-            anyhow::bail!("Code: \"{}\", message: \"{}\"", err.code, err.message);
+            anyhow::bail!(err.message);
         }
 
         let res = res.deserialize_multiple()?;
+        Ok(res)
+    }
+
+    pub async fn fetch_scalar<T>(self, conn: &mut PSConnection) -> Result<T>
+    where
+        T: Parser,
+    {
+        let res = self.execute_raw(conn).await?;
+        if let Some(err) = res.error {
+            anyhow::bail!(err.message);
+        }
+
+        let res = res.deserialize_scalar()?;
         Ok(res)
     }
 }
