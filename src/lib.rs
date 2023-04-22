@@ -1,10 +1,12 @@
 pub use crate::connections::PSConnection;
 pub use deserializer::Deserializer;
+pub use parser::Parser;
 pub use ps_driver_deserializer::Database;
 pub use querybuilder::QueryBuilder;
 
 mod connections;
 mod deserializer;
+mod parser;
 mod querybuilder;
 mod request;
 mod structs;

@@ -14,19 +14,22 @@ pub fn derive_database(_input: TokenStream) -> TokenStream {
 
         let mut names = Vec::new();
         let mut values = Vec::new();
+
         for i in 0..fields.len() {
             let field = &fields[i];
 
             let name = &field.ident;
+            let ty = &field.ty;
             names.push(name);
 
             let index = syn::Index::from(i);
             values.push(quote::quote! {
-                input[#index].parse()?
+                #ty::custom_parse(input[#index])?
             });
         }
 
         let output = quote::quote! {
+            use planetscale_driver::Parser;
             impl Deserializer for #name {
                 fn deserialize_raw(input: Vec<&str>) -> anyhow::Result<Self> {
                     if input.len() != #fields_len {
