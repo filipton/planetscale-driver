@@ -84,7 +84,7 @@ let res = query("INSERT INTO test(id, name) VALUES($0, \"$1\")")
 // NOTE: conn in closure isn't affecting main conn, its copied so session
 // isn't modifed on "original" conn
 conn.transaction(|conn| async move {
-    //             ^- conn is begind Arc Mutex so we must do that
+    //             ^- conn is Arc Mutex so we must do that
     //                note: it's not normal mutex (it's async mutex)
     let mut conn = conn.lock().await;
 
