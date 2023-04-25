@@ -94,6 +94,9 @@ conn.transaction(|conn| async move {
     conn.execute("OTHER QUERY")
         .await?;
 
+    //     ^- use question mark to propagate errors "up"
+    //        it's required if you want to rollback changes after error
+
     Ok(())
 }).await?;
 ```

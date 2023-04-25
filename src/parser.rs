@@ -98,11 +98,11 @@ impl Parser for f32 {
 
 impl Parser for bool {
     fn custom_parse(input: &str) -> Result<Self> {
-        return match input {
+        match input {
             "1" => Ok(true),
             "0" => Ok(false),
             _ => Err(anyhow::anyhow!("Invalid boolean")),
-        };
+        }
     }
 }
 
