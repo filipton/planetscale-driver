@@ -18,7 +18,12 @@ Rust "version" of [database-js](https://github.com/planetscale/database-js). As 
 It will run perfectly run on Cloudflare Workers Or Vercel Edge Functions.
 
 ## Usage
-NOTE: [Anyhow](https://crates.io/crates/anyhow) crate is required while using deserializer.
+```bash
+cargo add planetscale-driver
+# also "cargo add anyhow"
+```
+
+Then proceed like in examples!
 
 ## Examples
 ### Connection and simple SQL execution
