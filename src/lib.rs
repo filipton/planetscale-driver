@@ -1,7 +1,7 @@
 pub use crate::connections::PSConnection;
 pub use deserializer::Deserializer;
 pub use parser::Parser;
-pub use ps_driver_deserializer::Database;
+pub use planetscale_driver_macros::{Database, DatabaseJSON};
 pub use querybuilder::QueryBuilder;
 
 mod connections;

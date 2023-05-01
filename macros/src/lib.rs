@@ -29,9 +29,10 @@ pub fn derive_database(_input: TokenStream) -> TokenStream {
         }
 
         let output = quote::quote! {
-            use planetscale_driver::Parser;
             impl Deserializer for #name {
                 fn deserialize_raw(input: Vec<&str>) -> anyhow::Result<Self> {
+                    use planetscale_driver::Parser;
+
                     if input.len() != #fields_len {
                         anyhow::bail!("Invalid number of fields");
                     }
@@ -41,6 +42,32 @@ pub fn derive_database(_input: TokenStream) -> TokenStream {
                             #names: #values,
                         )*
                     })
+                }
+            }
+        };
+
+        TokenStream::from(output)
+    } else {
+        panic!("Only structs are supported")
+    }
+}
+
+#[proc_macro_derive(DatabaseJSON)]
+pub fn derive_database_json(_input: TokenStream) -> TokenStream {
+    let input = syn::parse_macro_input!(_input as syn::DeriveInput);
+    let name = &input.ident;
+
+    if let syn::Data::Struct(_) = &input.data {
+        let output = quote::quote! {
+            impl planetscale_driver::Parser for #name {
+                fn custom_parse(input: &str) -> anyhow::Result<Self> {
+                    serde_json::from_str(input).map_err(|e| e.into())
+                }
+            }
+
+            impl ToString for TestJSON {
+                fn to_string(&self) -> String {
+                    serde_json::to_string(self).unwrap()
                 }
             }
         };
