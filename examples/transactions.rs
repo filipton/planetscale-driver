@@ -12,7 +12,7 @@ pub struct TestDsadsa {
 pub async fn main() -> Result<()> {
     let mut conn = PSConnection::new(&var("PS_HOST")?, &var("PS_USER")?, &var("PS_PASS")?);
 
-    query("CREATE TABLE test_dsadsa2(id INT AUTO_INCREMENT PRIMARY KEY, value INT NOT NULL)")
+    query("CREATE TABLE IF NOT EXISTS test_dsadsa2(id INT AUTO_INCREMENT PRIMARY KEY, value INT NOT NULL)")
         .execute(&mut conn)
         .await?;
 

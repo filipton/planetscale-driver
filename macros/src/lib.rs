@@ -65,7 +65,7 @@ pub fn derive_database_json(_input: TokenStream) -> TokenStream {
                 }
             }
 
-            impl ToString for TestJSON {
+            impl ToString for #name {
                 fn to_string(&self) -> String {
                     serde_json::to_string(self).unwrap()
                 }
