@@ -1,5 +1,5 @@
 use anyhow::Result;
-use planetscale_driver::{query, Database, DatabaseJSON, Deserializer, PSConnection};
+use planetscale_driver::{query, Database, DatabaseJSON, PSConnection};
 use serde::{Deserialize, Serialize};
 use std::env::var;
 

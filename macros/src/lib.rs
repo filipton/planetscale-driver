@@ -29,7 +29,7 @@ pub fn derive_database(_input: TokenStream) -> TokenStream {
         }
 
         let output = quote::quote! {
-            impl Deserializer for #name {
+            impl planetscale_driver::Deserializer for #name {
                 fn deserialize_raw(input: Vec<&str>) -> anyhow::Result<Self> {
                     use planetscale_driver::Parser;
 

@@ -1,19 +1,19 @@
 [package]
 name = "planetscale-driver"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 description = "PlanetScale Serverless Driver"
 license = "MIT"
 repository = "https://github.com/filipton/planetscale-driver"
 
 [dependencies]
-planetscale-driver-macros = { path = "./macros", version = "0.2.0" }
-anyhow = "1.0.70"
+planetscale-driver-macros = { path = "./macros", version = "0.2.1" }
+anyhow = "1.0.71"
 base64 = "0.21.0"
-reqwest = "0.11.16"
+reqwest = "0.11.17"
 serde = { version = "1.0.160", features = ["derive"] }
 serde_json = "1.0.96"
 async-mutex = "1.4.0"
 
 [dev-dependencies]
-tokio = { version = "1.27.0", features = ["full"] }
+tokio = { version = "1.28.0", features = ["full"] }

@@ -43,7 +43,7 @@ let res = conn.execute("SELECT 1").await.unwrap();
 As you can see, deserialization doesn't use field names (MAYBE IN FUTURE) so remember to write your structs correctly!
 
 ```rust
-use planetscale_driver::{Database, Deserializer, query};
+use planetscale_driver::{Database, query};
 
 #[derive(Database, Debug)]
 struct TestD {
@@ -80,6 +80,33 @@ let res = query("INSERT INTO test(id, name) VALUES($0, \"$1\")")
   .bind(name)
   .execute(&mut conn)
   .await?;
+```
+
+### Json
+```rust
+use planetscale_driver::{Database, DatabaseJSON, query};
+
+#[derive(Database, Debug)]
+pub struct TestD {
+    pub val: u32,
+    pub test: TestJSON,
+}
+
+#[derive(DatabaseJSON, serde::Deserialize, serde::Serialize, Debug)]
+pub struct TestJSON {
+    pub text: String,
+    pub test: u32,
+}
+
+// ...
+
+let json: TestJSON = TestJSON {
+    text: "test1234321".to_string(),
+    test: 1234,
+};
+
+let res: TestD = query("SELECT 1010, '$0'").bind(json).fetch_one(&mut conn).await?;
+println!("{:?}", res);
 ```
 
 ### Transactions
