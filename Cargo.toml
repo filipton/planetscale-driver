@@ -10,7 +10,7 @@ repository = "https://github.com/filipton/planetscale-driver"
 planetscale-driver-macros = { path = "./macros", version = "0.2.2" }
 anyhow = "1.0.71"
 base64 = "0.21.0"
-reqwest = "0.11.17"
+reqwest = {version = "0.11.17", default-features = false, features= ["rustls-tls"]}
 serde = { version = "1.0.160", features = ["derive"] }
 serde_json = "1.0.96"
 async-mutex = "1.4.0"
