@@ -133,6 +133,19 @@ conn.transaction(|conn| async move {
 }).await?;
 ```
 
+### Features
+
+This crate uses [reqwest](https://docs.rs/reqwest/latest/reqwest/) for making http requests. By default, this crate will use the `default-tls` feature of `reqwest` which may not build in your environment (e.g. netlify serverless functions). You can override this by disabling the default features of this crate and enabling a different reqwest tls feature like so:
+
+```toml
+planetscale-driver = {version="0.3.2", default-features=false}
+reqwest= {version= "0.11.17", default-features=false, features=["rustls-tls"]}
+```
+
+> **Warning**
+> If you simply disable default features and do not enable a different tls feature, reqwest will panic at runtime.
+
+
 ### More examples in the [examples](examples) folder
 If you want to run them:
 ```bash
