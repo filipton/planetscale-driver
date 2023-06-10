@@ -15,7 +15,7 @@
 </div>
 
 Rust "version" of [database-js](https://github.com/planetscale/database-js). As stated in database-js it uses PlanetScale HTTP api for database queries.
-It will run perfectly run on Cloudflare Workers Or Vercel Edge Functions.
+It will perfectly run on Cloudflare Workers Or Vercel Edge Functions.
 
 ## Usage
 ```bash
