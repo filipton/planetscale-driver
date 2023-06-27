@@ -5,7 +5,7 @@ use crate::{
 };
 use anyhow::Result;
 use async_mutex::Mutex;
-use std::sync::Arc;
+use std::{env, sync::Arc};
 
 #[derive(Clone)]
 pub struct PSConnection {
@@ -24,6 +24,15 @@ impl PSConnection {
             session: Arc::new(Mutex::new(None)),
             client: reqwest::Client::new(),
         }
+    }
+
+    /// Creates a new connection from the environment variables (DATABASE_HOST, DATABASE_USERNAME, DATABASE_PASSWORD)
+    pub fn new_from_env() -> Result<Self> {
+        Ok(PSConnection::new(
+            &env::var("DATABASE_HOST")?,
+            &env::var("DATABASE_USERNAME")?,
+            &env::var("DATABASE_PASSWORD")?,
+        ))
     }
 
     /// Execute a SQL query
