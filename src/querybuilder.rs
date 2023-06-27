@@ -35,15 +35,15 @@ impl QueryBuilder {
         query
     }
 
-    pub async fn execute(self, connection: &mut PSConnection) -> Result<()> {
+    pub async fn execute(self, connection: &PSConnection) -> Result<()> {
         connection.execute(&self.generate_query()).await
     }
 
-    pub async fn execute_raw(self, connection: &mut PSConnection) -> Result<ExecuteResponse> {
+    pub async fn execute_raw(self, connection: &PSConnection) -> Result<ExecuteResponse> {
         connection.execute_raw(&self.generate_query()).await
     }
 
-    pub async fn fetch_one<T>(self, conn: &mut PSConnection) -> Result<T>
+    pub async fn fetch_one<T>(self, conn: &PSConnection) -> Result<T>
     where
         T: Deserializer,
     {
@@ -56,7 +56,7 @@ impl QueryBuilder {
         Ok(res)
     }
 
-    pub async fn fetch_all<T>(self, conn: &mut PSConnection) -> Result<Vec<T>>
+    pub async fn fetch_all<T>(self, conn: &PSConnection) -> Result<Vec<T>>
     where
         T: Deserializer,
     {
@@ -69,7 +69,7 @@ impl QueryBuilder {
         Ok(res)
     }
 
-    pub async fn fetch_scalar<T>(self, conn: &mut PSConnection) -> Result<T>
+    pub async fn fetch_scalar<T>(self, conn: &PSConnection) -> Result<T>
     where
         T: Parser,
     {

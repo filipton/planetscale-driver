@@ -9,12 +9,12 @@ pub struct TestD {
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
-    let mut conn = PSConnection::new(&var("PS_HOST")?, &var("PS_USER")?, &var("PS_PASS")?);
+    let conn = PSConnection::new(&var("PS_HOST")?, &var("PS_USER")?, &var("PS_PASS")?);
 
-    let res: TestD = query("SELECT true").fetch_one(&mut conn).await?;
+    let res: TestD = query("SELECT true").fetch_one(&conn).await?;
     println!("{:?}", res);
 
-    let res: bool = query("SELECT true").fetch_scalar(&mut conn).await?;
+    let res: bool = query("SELECT true").fetch_scalar(&conn).await?;
     println!("{:?}", res);
 
     return Ok(());

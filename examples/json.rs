@@ -17,14 +17,14 @@ pub struct TestJSON {
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
-    let mut conn = PSConnection::new(&var("PS_HOST")?, &var("PS_USER")?, &var("PS_PASS")?);
+    let conn = PSConnection::new(&var("PS_HOST")?, &var("PS_USER")?, &var("PS_PASS")?);
 
     let json: TestJSON = TestJSON {
         text: "test1234321".to_string(),
         test: 1234,
     };
 
-    let res: TestD = query("SELECT 1010, '$0'").bind(json).fetch_one(&mut conn).await?;
+    let res: TestD = query("SELECT 1010, '$0'").bind(json).fetch_one(&conn).await?;
     println!("{:?}", res);
 
     return Ok(());

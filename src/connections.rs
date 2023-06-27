@@ -11,7 +11,7 @@ use std::sync::Arc;
 pub struct PSConnection {
     pub(crate) host: String,
     pub(crate) auth: String,
-    pub session: Option<Session>,
+    pub session: Arc<Mutex<Option<Session>>>,
     pub client: reqwest::Client,
 }
 
@@ -21,27 +21,27 @@ impl PSConnection {
         Self {
             host: host.into(),
             auth: format!("Basic {}", to_base64(&format!("{}:{}", username, password))),
-            session: None,
+            session: Arc::new(Mutex::new(None)),
             client: reqwest::Client::new(),
         }
     }
 
     /// Execute a SQL query
-    pub async fn execute(&mut self, query: &str) -> Result<()> {
+    pub async fn execute(&self, query: &str) -> Result<()> {
         self.execute_raw(query).await?;
         Ok(())
     }
 
     /// Execute a SQL query and return the raw response
-    pub async fn execute_raw(&mut self, query: &str) -> Result<ExecuteResponse> {
+    pub async fn execute_raw(&self, query: &str) -> Result<ExecuteResponse> {
         let url = format!("https://{}/psdb.v1alpha1.Database/Execute", self.host);
         let sql = ExecuteRequest {
             query: query.into(),
-            session: self.session.clone(),
+            session: self.session.lock().await.clone(),
         };
 
         let res: ExecuteResponse = post(self, &url, sql).await?;
-        self.session = Some(res.session.clone());
+        self.session.lock().await.replace(res.session.clone());
 
         if let Some(err) = res.error {
             anyhow::bail!("Code: \"{}\", message: \"{}\"", err.code, err.message);
@@ -53,27 +53,25 @@ impl PSConnection {
     /// As the name suggests, this function is making a transaction
     pub async fn transaction<F, Fut>(&self, f: F) -> Result<()>
     where
-        F: FnOnce(Arc<Mutex<Self>>) -> Fut,
+        F: FnOnce(Self) -> Fut,
         Fut: std::future::Future<Output = Result<()>>,
     {
-        let cloned_conn = Arc::new(Mutex::new(self.clone()));
-
-        cloned_conn.lock().await.execute("BEGIN").await?;
-        let res = f(cloned_conn.clone()).await;
+        self.execute("BEGIN").await?;
+        let res = f(self.clone()).await;
         if res.is_err() {
-            cloned_conn.lock().await.execute("ROLLBACK").await?;
+            self.execute("ROLLBACK").await?;
             return res;
         }
 
-        cloned_conn.lock().await.execute("COMMIT").await?;
+        self.execute("COMMIT").await?;
         Ok(())
     }
 
     /// Refreshes the session
-    pub async fn refresh(&mut self) -> Result<()> {
+    pub async fn refresh(&self) -> Result<()> {
         let url = format!("https://{}/psdb.v1alpha1.Database/CreateSession", self.host);
         let res: ExecuteResponse = post_raw(self, &url, String::from("{}")).await?;
-        self.session = Some(res.session);
+        self.session.lock().await.replace(res.session.clone());
 
         Ok(())
     }

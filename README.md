@@ -30,7 +30,7 @@ Then proceed like in examples!
 ```rust
 use planetscale_driver::PSConnection;
 
-let mut conn = PSConnection::new(
+let conn = PSConnection::new(
   "<host>",
   "<user>",
   "<password>",
@@ -52,13 +52,13 @@ struct TestD {
 
 // ...
 
-let res: TestD = query("SELECT 1").fetch_one(&mut conn).await?;
+let res: TestD = query("SELECT 1").fetch_one(&conn).await?;
 println!("{:?}", res);
 
-let res: Vec<TestD> = query("SELECT val FROM testds").fetch_all(&mut conn).await?;
+let res: Vec<TestD> = query("SELECT val FROM testds").fetch_all(&conn).await?;
 println!("{:?}", res);
 
-let res: bool = query("SELECT true").fetch_scalar(&mut conn).await?;
+let res: bool = query("SELECT true").fetch_scalar(&conn).await?;
 println!("{:?}", res);
 ```
 
@@ -78,7 +78,7 @@ let name = "420";
 let res = query("INSERT INTO test(id, name) VALUES($0, \"$1\")")
   .bind(id)
   .bind(name)
-  .execute(&mut conn)
+  .execute(&conn)
   .await?;
 ```
 
@@ -105,7 +105,7 @@ let json: TestJSON = TestJSON {
     test: 1234,
 };
 
-let res: TestD = query("SELECT 1010, '$0'").bind(json).fetch_one(&mut conn).await?;
+let res: TestD = query("SELECT 1010, '$0'").bind(json).fetch_one(&conn).await?;
 println!("{:?}", res);
 ```
 
@@ -113,13 +113,7 @@ println!("{:?}", res);
 ```rust
 // ...
 
-// NOTE: conn in closure isn't affecting main conn, its copied so session
-// isn't modifed on "original" conn
 conn.transaction(|conn| async move {
-    //             ^- conn is Arc Mutex so we must do that
-    //                note: it's not normal mutex (it's async mutex)
-    let mut conn = conn.lock().await;
-
     conn.execute("QUERY")
         .await?;
 
@@ -138,7 +132,7 @@ conn.transaction(|conn| async move {
 This crate uses [reqwest](https://docs.rs/reqwest/latest/reqwest/) for making http requests. By default, this crate will use the `default-tls` feature of `reqwest` which may not build in your environment (e.g. netlify serverless functions). You can override this by disabling the default features of this crate and enabling a different reqwest tls feature like so:
 
 ```toml
-planetscale-driver = {version="0.3.2", default-features=false}
+planetscale-driver = {version="0.5.0", default-features=false}
 reqwest= {version= "0.11.17", default-features=false, features=["rustls-tls"]}
 ```
 
