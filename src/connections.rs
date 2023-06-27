@@ -4,8 +4,8 @@ use crate::{
     utils::to_base64,
 };
 use anyhow::Result;
-use async_mutex::Mutex;
 use std::{env, sync::Arc};
+use tokio::sync::Mutex;
 
 #[derive(Clone)]
 pub struct PSConnection {
